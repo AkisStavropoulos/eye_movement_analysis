@@ -1,0 +1,190 @@
+%% Test Weber law for Time
+% Distance
+indx = intersect(stimtype.s2,tau.bin1);
+
+figure;
+d_err = [];
+ts = [];
+for i = 1:length(indx)
+    d_err(i) = trials(indx(i)).stats.d_err;
+    ts(i) = trials(indx(i)).continuous.ts(end);
+end
+x = ts';
+X = [x ones(length(x),1)];
+y = d_err';
+[b]=regress(y,X);
+c = b(2);
+b = b(1);
+plot(ts,d_err,'o');hold on;
+plot(x,x*b + c,'r','LineWidth',2);
+title('T');xlim([0 25]);xlabel('T');ylabel('distance error');hold off;
+
+figure;
+d_err = [];
+ts_sqrt = [];
+for i = 1:length(indx)
+    d_err(i) = trials(indx(i)).stats.d_err;
+    ts_sqrt(i) = sqrt(trials(indx(i)).continuous.ts(end));
+end
+plot(ts_sqrt,d_err,'o');hold on;
+x = ts_sqrt';
+X = [x ones(length(x),1)];
+y = d_err';
+[b]=regress(y,X);
+c = b(2);
+b = b(1);
+plot(x,x*b + c,'r','LineWidth',2);
+title('sqrt(T)');xlim([0 25]);xlabel('sqrt(T)');ylabel('distance error');hold off;
+
+%% angle
+figure;
+th_err = [];
+ts = [];
+for i = 1:length(indx)
+    th_err(i) = trials(indx(i)).stats.th_err;
+    ts(i) = trials(indx(i)).continuous.ts(end);
+end
+plot(ts,th_err,'o');hold on;
+x = ts';
+X = [x ones(length(x),1)];
+y = th_err';
+[b]=regress(y,X);
+c = b(2);
+b = b(1);
+plot(x,x*b + c,'r','LineWidth',2);
+title('T');xlim([0 25]);xlabel('T');ylabel('distance error');hold off;
+
+figure;
+th_err = [];
+ts_sqrt = [];
+for i = 1:length(indx)
+    th_err(i) = trials(indx(i)).stats.th_err;
+    ts_sqrt(i) = sqrt(trials(indx(i)).continuous.ts(end));
+end
+plot(ts_sqrt,th_err,'o');hold on;
+x = ts_sqrt';
+X = [x ones(length(x),1)];
+y = th_err';
+[b]=regress(y,X);
+c = b(2);
+b = b(1);
+plot(x,x*b + c,'r','LineWidth',2);
+title('sqrt(T)');xlim([0 25]);xlabel('sqrt(T)');ylabel('distance error');hold off;
+
+%% Test Weber law for target Distance and Angle
+%% Distance
+indx = intersect(stimtype.s2,tau.bin1);
+
+figure;
+subplot(2,1,1);
+d_err = [];
+r_tar = [];
+for i = 1:length(indx)
+    d_err(i) = trials(indx(i)).stats.d_err;
+    r_tar(i) = trials(indx(i)).prs.r_tar;
+end
+x = r_tar';
+X = [x ones(length(x),1)];
+y = d_err';
+[b]=regress(y,X);
+c = b(2);
+b = b(1);
+meany = mean(x*b + c);
+sd = sqrt((d_err - meany).^2);
+% plot(r_tar,d_err,'o');hold on;
+% plot(x,x*b + c,'r','LineWidth',2);hold on;
+% title('X');xlim([100 600]);xlabel('X [cm]');ylabel('distance error [cm]');hold off;
+%
+p = polyfit(r_tar,sd,2);
+f = polyval(p,r_tar);
+plot(r_tar,sd,'o');
+hold on;plot(r_tar,f,'r.');grid on;
+xlabel('target distance [cm]');ylabel('STD of distance error [cm]');title('SD of distance error over distance');
+%
+
+
+subplot(2,1,2);
+d_err = [];
+r_tar_sqrt = [];
+for i = 1:length(indx)
+    d_err(i) = trials(indx(i)).stats.d_err;
+    r_tar_sqrt(i) = sqrt(trials(indx(i)).prs.r_tar);
+end
+x = r_tar_sqrt';
+X = [x ones(length(x),1)];
+y = d_err';
+[b]=regress(y,X);
+c = b(2);
+b = b(1);
+meany = mean(x*b + c);
+sd = sqrt((d_err - meany).^2);
+% plot(r_tar_sqrt,d_err,'o');hold on;
+% plot(x,x*b + c,'r','LineWidth',2);
+% title('sqrt(X)');xlim([0 25]);xlabel('sqrt(X)');ylabel('distance error');hold off;
+% 
+p = polyfit(r_tar_sqrt,sd,2);
+f = polyval(p,r_tar_sqrt);
+plot(r_tar_sqrt,sd,'o');
+hold on;plot(r_tar_sqrt,f,'r.');grid on;
+xlabel('SQRT of target distance [cm]');ylabel('STD of distance error [cm]');title('SD of distance error over SQRT of distance');
+suptitle(trials(1).prs.subject);
+
+%% Angle
+indx = intersect(stimtype.s2,tau.bin1);
+
+figure;
+subplot(2,1,1);
+th_err = [];
+th_tar = [];
+for i = 1:length(indx)
+    th_err(i) = trials(indx(i)).stats.th_err;
+    th_tar(i) = trials(indx(i)).prs.th_tar;
+end
+x = th_tar';
+X = [x ones(length(x),1)];
+y = th_err';
+[b]=regress(y,X);
+c = b(2);
+b = b(1);
+meany = 0;%mean(x*b + c);
+sd = abs(th_err);%sqrt((th_err - meany).^2);
+% plot(th_tar,th_err,'o');hold on;
+% plot(x,x*b + c,'r','LineWidth',2);hold on;
+% title('X');xlim([-50 50]);xlabel('X [cm]');ylabel('distance error [cm]');hold off;
+%
+p = polyfit(abs(th_tar),sd,2);
+f = polyval(p,abs(th_tar));
+plot(abs(th_tar),sd,'o');
+hold on;plot(abs(th_tar),f,'r.');grid on;
+xlabel('target angle [deg]');ylabel('STD of angular error [deg]');title('SD of distance error over angle');
+%
+
+
+subplot(2,1,2);
+th_err = [];
+th_tar_sqrt = [];
+for i = 1:length(indx)
+    th_err(i) = trials(indx(i)).stats.th_err;
+    th_tar_sqrt(i) = sqrt(abs(trials(indx(i)).prs.th_tar));
+end
+x = th_tar_sqrt';
+X = [x ones(length(x),1)];
+y = th_err';
+[b]=regress(y,X);
+c = b(2);
+b = b(1);
+meany = 0;%mean(x*b + c);
+sd = abs(th_err);%sqrt((th_err - meany).^2);
+% plot(r_tar_sqrt,d_err,'o');hold on;
+% plot(x,x*b + c,'r','LineWidth',2);
+% title('sqrt(X)');xlim([0 25]);xlabel('sqrt(X)');ylabel('distance error');hold off;
+% 
+p = polyfit(th_tar_sqrt,sd,2);
+f = polyval(p,th_tar_sqrt);
+plot(th_tar_sqrt,sd,'o');
+hold on;plot(th_tar_sqrt,f,'r.');grid on;
+xlabel('SQRT of target angle [deg]');ylabel('STD of angular error [deg]');title('SD of distance error over SQRT of angle');
+suptitle(trials(1).prs.subject);
+
+
+    

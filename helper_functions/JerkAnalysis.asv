@@ -1,0 +1,78 @@
+%% UNCONDITIONAL analysis of JERK 
+%
+%% Distribution of final cumulative Jerk of all trials
+% all subjects
+N = 100;
+logsc = 0;
+[J_avg,J_sig] = all_jerk_hist(subject,N,logsc,1);
+%
+% one subject at a time
+N = 50;
+logsc = 1;
+plt = 0;
+for i = 1:length(subject)
+    if i%sum(i == [ 11 14]) == 0
+    [avg(i),sig(i)] = all_jerk_hist(subject(i),N,logsc,plt);
+    else
+        avg(i) = nan;
+        sig(i) = nan;
+    end
+end
+% plot mean and std jerk of every subject
+jerk_mean_std_plot(exp(avg),exp(sig),subject_name);
+%% Distribution of Jerk over trajectory
+align_flag = 0; % align based on the highest final value
+% Whole Trial
+[~, ~] = jerk_traj_avg(subject,align_flag);
+% final N*Taus
+align_flag = 1; % align based on the highest final value
+trialtaus = 2;
+[~, ~] = jerk_tautime_avg(subject,trialtaus,align_flag);
+
+
+%%
+%
+%% CONDITIONAL analysis of all subjects' JERK
+%
+%% JERK and TAU
+% Jerk vs Tau regression
+[rho,pval] = jerk_vs_tau_all(subject,'lin');
+% Jerk distribution conditioned on tau: P(J|tau)
+N = 20;
+tau_jerk_hist(subject,N);
+% Joint probability of J and tau: P(J,tau)
+N = 50;
+jerk_tau_P(subject,N);
+%% JERK and ANGLE
+% Joint probability of J and target angle: P(J,angle)
+hold off;
+N = 20;
+M = 2; % angle bins
+ang_jerk_hist(subject,N,M);
+% Jerk vs Angle Regression
+jerk_vs_ang_all(subject,'lin');
+
+%% JERK and DISTANCE
+% Jerk vs Target Distance Regression
+[rho,pval] = jerk_dist_all(subject,'lin');
+%% JERK and MODALITY
+% all subjects
+N = 30;
+logsc = 1;
+mod_jerk_hist(subject,N,logsc,1);
+% one subject at a time (many subjects jerk more in visual))
+N = 20;
+logsc = 1;
+plt = 0;
+modavg = [];
+modsig = [];
+for i = 1:length(subject)
+    if i%sum(i == [8 11 14]) == 1
+    [modavg(i,:),modsig(i,:)] = mod_jerk_hist(subject(i),N,logsc,plt);
+    leg_inp{i} = subject_name{i};
+    end
+end
+
+for i = 2:length(subject)
+        subject(i).stimtau = rmfield(subject(i).stimtau,{'lim1','lim2','lim3','lim4','lim5'});
+end
