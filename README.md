@@ -9,9 +9,11 @@ No specific hardware requirements needed.
 
 1) Download all content of the repo.
 
-2) You can find the main script under /main_repo with the name EyesEmbodyInternalBeliefs_code.m. 
+2) Add to path both the main repo and helper functions.
 
-3) Run this script and the data analysis will start and the figures shown in the manuscript will be produced and should look identical.
+3) You can find the main script under /main_repo with the name EyesEmbodyInternalBeliefs_code.m. 
+
+4) Run this script and the data analysis will start and the figures shown in the manuscript will be produced and should look identical.
 
 * It should take less than 5 minutes for the whole code to run (including loading of dataset).
 
