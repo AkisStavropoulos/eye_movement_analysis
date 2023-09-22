@@ -1,8 +1,6 @@
 # eye_movement_analysis
 Code for eye movement analysis of human firefly task data.
-
 It has been tested and can run in any version of MATLAB between 2018 and 2022.
-
 No specific hardware requirements needed.
 
 
