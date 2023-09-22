@@ -19,7 +19,8 @@ No specific hardware requirements needed.
 
 4) You can find the main script under /main_repo with the name EyesEmbodyInternalBeliefs_code.m.
 
-5) In line 9 of that script, change the data folder path to correspond to the folder you saved the dataset in (demo or full dataset), e.g., data_folder = 'C:\Users\me\Data\';
+5) In **line 9** of that script, change the data folder path to correspond to the folder you saved the dataset in (demo or full dataset), e.g., data_folder = 'C:\Users\me\Data\';
+- If you are using the demo dataset, make sure you also change the name of the file to load from 'EyeMovementDataset.mat' to 'EyeMovementDataset_demo.mat' in **line 20**.
 
 6) Run this script and the data analysis will start and the figures shown in the manuscript will be produced and should look identical.
 
