@@ -7,7 +7,7 @@ No specific hardware requirements needed.
 
 **In order to run:**
 
-1) Full and demo datasets are uploaded on https://gin.g-650 node.org/akis_stavropoulos/belief_embodiment_through_eye_movements_facilitates_memory-651 guided_navigation.
+1) Full and demo datasets are uploaded on https://gin.g-node.org/akis_stavropoulos/belief_embodiment_through_eye_movements_facilitates_memory-guided_navigation.
 
 - To run the **full dataset**: download EyeMovementDataset.mat.
 
