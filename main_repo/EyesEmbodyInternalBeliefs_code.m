@@ -17,45 +17,31 @@ default_prs;
 
 % Load data
 fldcont = dir(data_folder);
-dataindx = arrayfun(@(x) contains(x.name,'EyeAnalysisData.mat'), fldcont);
+dataindx = arrayfun(@(x) contains(x.name,'EyeMovementDataset.mat'), fldcont);
 if any(dataindx)
     tic;
-    disp('.... Loading EyeAnalysisData.mat')
+    disp('.... Loading EyeMovementDataset.mat')
     load(fldcont(dataindx).name);
     toc;
 else
-    error('EyeAnalysisData.mat was not found.')
+    error('dataset was not found.')
 end
-
-% remove subjects
-subject = subject_backup;
-keepindx = [1 2 7 9 10 12 13 14]; 
-subject = subject_backup(keepindx);
-subject_name = subject_name(keepindx);
 
 %% Extract time-based eye movement analysis
 rmsac = 0;
 
-fldcont = dir(data_folder);
-
 % sensory condition groups
-struct_indx = arrayfun(@(x) contains(x.name,'tracking_regular.mat'), fldcont);
-if any(struct_indx)
-    if ~exist('tracking_regular')
-        load(fldcont(struct_indx).name);
-        disp('.....tracking_regular Loaded.')
-    else; error('"tracking_regular" does not exist.')
-    end
+if ~exist('tracking_regular')
+    params = 'stimtype';
+    tracking_regular = EyeAnalysisOverTime(subject,params,rmsac,prs);
+    save('tracking_regular.mat','tracking_regular','-v7.3');
 end
 
 % all trials
-struct_indx = arrayfun(@(x) contains(x.name,'tracking_regular_all.mat'), fldcont);
-if any(struct_indx)
-    if ~exist('tracking_regular_all')
-        load(fldcont(struct_indx).name);
-        disp('.....tracking_regular_all Loaded.')
-    else; error('"tracking_regular_all" does not exist.')
-    end
+if ~exist('tracking_regular_all')
+    params = [];
+    tracking_regular_all = EyeAnalysisOverTime(subject,params,rmsac,prs);
+    save('tracking_regular_all.mat','tracking_regular_all','-v7.3');
 end
 
 Nsubs = size(tracking_regular,1);
@@ -67,13 +53,9 @@ xaxislim = [0 10];  xaxislabel = 'time [s]';
 align_flag = []; % 'align2targ';
 dd_distperc = 0.005;
 
-struct_indx = arrayfun(@(x) contains(x.name,'tracking_distperc.mat'), fldcont);
-if any(struct_indx)
-    if ~exist('tracking_distperc')
-        load(fldcont(struct_indx).name);
-        disp('.....tracking_distperc Loaded.')
-    else; error('"tracking_distperc" does not exist.')
-    end
+if ~exist('tracking_distperc')
+    tracking_distperc = EyeAnalysisOverDistancePercentage(tracking_regular,dd_distperc,align_flag,prs);
+    save('tracking_distperc.mat','tracking_distperc','-v7.3')
 end
 
 xaxislim = [0 1];  xaxislabel = 'distance %';
@@ -474,10 +456,6 @@ end
 %% Target tracking error when target OFF
 subject = subject_backup;
 default_prs;
-rmsac = 0;
-if 0
-tracking_regular_all = EyeAnalysisOverTime(subject,[],rmsac,prs);
-end
 outlier_thresh = 25;
 subindx = keepindx;
 Nsubs = numel(subindx);
@@ -959,14 +937,10 @@ rmsac = 1;
 
 % Analyze saccade-free eye movements
 
-fldcont = dir(data_folder);
-struct_indx = arrayfun(@(x) contains(x.name,'tracking_regular_nosac.mat'), fldcont);
-if any(struct_indx)
-    if ~exist('tracking_regular_nosac')
-        load(fldcont(struct_indx).name);
-        disp('.....tracking_regular_nosac Loaded.')
-    else; error('"tracking_regular_nosac" does not exist.')
-    end
+if ~exist('tracking_regular_nosac')
+    params = 'stimtype';
+    tracking_regular = EyeAnalysisOverTime(subject,params,rmsac,prs);
+    save('tracking_regular_nosac.mat','tracking_regular_nosac','-v7.3');
 end
 
 Nsubs = size(tracking_regular_nosac,1);
@@ -980,14 +954,9 @@ align_flag = []; % 'align2targ';
 dd_distperc = 0.005;
 
 
-fldcont = dir(data_folder);
-struct_indx = arrayfun(@(x) contains(x.name,'tracking_distperc_nosac.mat'), fldcont);
-if any(struct_indx)
-    if ~exist('tracking_distperc_nosac')
-        load(fldcont(struct_indx).name);
-        disp('.....tracking_distperc_nosac Loaded.')
-    else; error('"tracking_distperc_nosac" does not exist.')
-    end
+if ~exist('tracking_distperc_nosac')
+    tracking_distperc = EyeAnalysisOverDistancePercentage(tracking_regular,dd_distperc,align_flag,prs);
+    save('tracking_distperc_nosac.mat','tracking_distperc_nosac','-v7.3')
 end
 
 xaxislim = [0 1];  xaxislabel = 'distance %';
