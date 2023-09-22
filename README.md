@@ -9,7 +9,7 @@ No specific hardware requirements needed.
 
 1) Download all content of the repo.
 
-2) Add to path both the main repo and helper functions.
+2) Add to path both the main_repo and helper_functions folders.
 
 3) You can find the main script under /main_repo with the name EyesEmbodyInternalBeliefs_code.m. 
 
