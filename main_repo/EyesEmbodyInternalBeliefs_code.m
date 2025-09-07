@@ -135,7 +135,6 @@ params = 'stimtau';
 [p_r.comb(3),h_r.comb(3)] = signrank(bias.r(:,7),bias.r(:,9)); [p_th.comb(3),h_th.comb(3)] = signrank(bias.th(:,7),bias.th(:,9));
 
 %% Response variability and R^2 across sensory modalities (measure of uncertainty)
-subject = subject_backup(keepindx);
 Nsubs = numel(subject);
 
 params = 'stimtype';
