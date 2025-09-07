@@ -64,7 +64,6 @@ xaxislim = [0 1];  xaxislabel = 'distance %';
 %% BEHAVIORAL PERFORMANCE FIGURES
 %%
 %% Bias Detection and Multiplicative Model Fit (+ compare 1st-button-push bias with end-of-trial bias)
-subject = subject_backup(keepindx);
 
 polyorder = 1;  plt = 0;    intercept = 0;
 params = 'stimtype';
