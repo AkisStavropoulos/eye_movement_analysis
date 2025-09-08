@@ -6,7 +6,7 @@
 %% Load data
 inp = input('Clear everything? 1 yes, 0 no: ');
 if inp; clear; end
-data_folder = 'C:\Users\ges6\Documents\MATLAB\Data\Single firefly with motion cuing\Subjects\New\';
+data_folder = 'C:\Users\soopa\Documents\MATLAB\Eye Movement Paper\';
 cd(data_folder);
 folders = dir(data_folder);   folders = folders([folders.isdir]);
 
@@ -173,10 +173,12 @@ figure;
 for s = 1:Nstim
     subplot(1,2,1); hold on;
     bar(s,nanmean(var_r(:,s)),'facecolor',colr(s,:));errorbar(s,nanmean(var_r(:,s)),nanstd(var_r(:,s))./sqrt(Nsubs),'k','capsize',0);
+    scatter( repmat(s, Nsubs, 1), var_r(:,s), 15, 'k', 'filled', 'jitter','on', 'jitterAmount',0.1 );
     title('radial variance'); ylabel('variance [m^2]'); xticks(1:Nstim); xticklabels(legend_input);
         
     subplot(1,2,2); hold on;
     bar(s,nanmean(var_th(:,s)),'facecolor',colr(s,:));errorbar(s,nanmean(var_th(:,s)),nanstd(var_th(:,s))./sqrt(Nsubs),'k','capsize',0);
+    scatter( repmat(s, Nsubs, 1), var_th(:,s), 15, 'k', 'filled', 'jitter','on', 'jitterAmount',0.1 );
     title('angular variance'); ylabel('variance [deg^2]'); xticks(1:Nstim); xticklabels(legend_input);
 end
 [h_r,p_r] = ttest(var_r(:,1),var_r(:,2));
@@ -184,24 +186,24 @@ end
 [h_th,p_th] = ttest(var_th(:,1),var_th(:,2));
 
 % plot R^2
-figure; 
-for s = 1:Nstim
-    subplot(1,2,1); hold on;
-    bar(s,nanmean(R2_r(:,s)),'facecolor',colr(s,:));errorbar(s,nanmean(R2_r(:,s)),nanstd(R2_r(:,s))./sqrt(Nsubs),'k','capsize',0);
-    title('radial R^2'); ylabel('R-squared'); xticks(1:Nstim); xticklabels(legend_input);
-        
-    subplot(1,2,2); hold on;
-    bar(s,nanmean(R2_th(:,s)),'facecolor',colr(s,:));errorbar(s,nanmean(R2_th(:,s)),nanstd(R2_th(:,s))./sqrt(Nsubs),'k','capsize',0);
-    title('angular R^2'); ylabel('R-squared'); xticks(1:Nstim); xticklabels(legend_input);
-end
-
-figure; hold on;
-for s = 1:Nstim
-    R2_avg = 0.5*(R2_r(:,s)+R2_th(:,s));
-    bar(s,nanmean(R2_avg),'facecolor',colr(s,:));errorbar(s,nanmean(R2_avg),nanstd(R2_avg)./sqrt(Nsubs),'k','capsize',0);
-    title('average R^2'); ylabel('R-squared'); xticks(1:Nstim); xticklabels(legend_input);
-end
-
+% figure; 
+% for s = 1:Nstim
+%     subplot(1,2,1); hold on;
+%     bar(s,nanmean(R2_r(:,s)),'facecolor',colr(s,:));errorbar(s,nanmean(R2_r(:,s)),nanstd(R2_r(:,s))./sqrt(Nsubs),'k','capsize',0);
+%     title('radial R^2'); ylabel('R-squared'); xticks(1:Nstim); xticklabels(legend_input);
+%         
+%     subplot(1,2,2); hold on;
+%     bar(s,nanmean(R2_th(:,s)),'facecolor',colr(s,:));errorbar(s,nanmean(R2_th(:,s)),nanstd(R2_th(:,s))./sqrt(Nsubs),'k','capsize',0);
+%     title('angular R^2'); ylabel('R-squared'); xticks(1:Nstim); xticklabels(legend_input);
+% end
+% 
+% figure; hold on;
+% for s = 1:Nstim
+%     R2_avg = 0.5*(R2_r(:,s)+R2_th(:,s));
+%     bar(s,nanmean(R2_avg),'facecolor',colr(s,:));errorbar(s,nanmean(R2_avg),nanstd(R2_avg)./sqrt(Nsubs),'k','capsize',0);
+%     title('average R^2'); ylabel('R-squared'); xticks(1:Nstim); xticklabels(legend_input);
+% end
+% 
 
 %%
 %%
@@ -220,46 +222,59 @@ SDthresh = 1;
 sac_pad = .3; % seconds
 [b_r,b_th] = ErrScatterFit(subject,params,1,0,0);
 sac_pad = .3; % seconds
-for i = 1%:length(subject)
-    figure;
-    for s = 1:size(poolindx,2)
-        indx = poolindx{i,s};
-        Zeye = [];  Yeye = [];  Zstart = [];    Ystart = []; Zend = []; Yend = [];   Tend = []; cnt = 0;
-        for j = 1:length(indx)-300
-            
-            if sum(subject(i).trials(indx(j)).continuous.zle) ~=0
-            Zeye{j} = (subject(i).trials(indx(j)).continuous.zle + subject(i).trials(indx(j)).continuous.zre)./2;
-            Yeye{j} = (subject(i).trials(indx(j)).continuous.yle + subject(i).trials(indx(j)).continuous.yre)./2;
-            % Remove blinks
-            Zeye{j}(subject(i).trials(indx(j)).continuous.blink) = nan; Yeye{j}(subject(i).trials(indx(j)).continuous.blink) = nan;
-            % Remove saccades
-            t_sac = subject(i).trials(indx(j)).events.t_sac;
-            for t = 1:length(t_sac)
-                Zeye{j}(t_sac(t)/dt:t_sac(t)/dt + sac_pad/dt) = nan;    Yeye{j}(t_sac(t)/dt:t_sac(t)/dt + sac_pad/dt) = nan;
-            end
-            % Check length
-            if length(Zeye{j}) < ei
-                ind = length(Zeye{j});
-            else 
-                ind = ei;
-            end
-            Zeye{j} = Zeye{j}(si:ind);   Zstart(j) = Zeye{j}(1);     Zend(j) = Zeye{j}(end);
-            Yeye{j} = Yeye{j}(si:ind);   Ystart(j) = Yeye{j}(1);     Yend(j) = Yeye{j}(end);
-            subplot(1,size(poolindx,2),s);  hold on;
-            plot(Yeye{j},Zeye{j},'Color',colr(s,:),'LineWidth',.5); 
-            end
-        end
-        plot(Ystart,Zstart,'b.');   plot(Yend,Zend,'k+');
-        xlabel('Eye position Y');   ylabel('Eye position Z');   legend(legend_input{s}); 
-        axis equal;                 xlim([-40 40]);ylim([-60 20]);  
-    end
-    sgtitle(subject(i).name);
-end
+
+% for i = 1%:length(subject)
+%     figure;
+%     for s = 1:size(poolindx,2)
+%         indx = poolindx{i,s};
+%         Zeye = [];  Yeye = [];  Zstart = [];    Ystart = []; Zend = []; Yend = [];   Tend = []; cnt = 0;
+%         for j = 1:length(indx)-300
+%             
+%             if sum(subject(i).trials(indx(j)).continuous.zle) ~=0
+%             Zeye{j} = (subject(i).trials(indx(j)).continuous.zle + subject(i).trials(indx(j)).continuous.zre)./2;
+%             Yeye{j} = (subject(i).trials(indx(j)).continuous.yle + subject(i).trials(indx(j)).continuous.yre)./2;
+%             % Remove blinks
+%             Zeye{j}(subject(i).trials(indx(j)).continuous.blink) = nan; Yeye{j}(subject(i).trials(indx(j)).continuous.blink) = nan;
+%             % Remove saccades
+%             t_sac = subject(i).trials(indx(j)).events.t_sac;
+%             for t = 1:length(t_sac)
+%                 Zeye{j}(t_sac(t)/dt:t_sac(t)/dt + sac_pad/dt) = nan;    Yeye{j}(t_sac(t)/dt:t_sac(t)/dt + sac_pad/dt) = nan;
+%             end
+%             % Check length
+%             if length(Zeye{j}) < ei
+%                 ind = length(Zeye{j});
+%             else 
+%                 ind = ei;
+%             end
+%             Zeye{j} = Zeye{j}(si:ind);   Zstart(j) = Zeye{j}(1);     Zend(j) = Zeye{j}(end);
+%             Yeye{j} = Yeye{j}(si:ind);   Ystart(j) = Yeye{j}(1);     Yend(j) = Yeye{j}(end);
+%             subplot(1,size(poolindx,2),s);  hold on;
+%             plot(Yeye{j},Zeye{j},'Color',colr(s,:),'LineWidth',.5); 
+%             end
+%         end
+%         plot(Ystart,Zstart,'b.');   plot(Yend,Zend,'k+');
+%         xlabel('Eye position Y');   ylabel('Eye position Z');   legend(legend_input{s}); 
+%         axis equal;                 xlim([-40 40]);ylim([-60 20]);  
+%     end
+%     sgtitle(subject(i).name);
+% end
 %% Find example trial for target-tracking in Eye coordinates
-for i = 1:length(subject)
-    figure;
-    
-   for s = 2:size(poolindx,2) 
+
+% create eye_movement struct
+params = 'stimtype';
+default_prs; upperbnd = 0; BELIEF = 0; 
+prs.boots = 0; 
+[poolindx,legend_input] = get_poolindx(subject,params); 
+if 1
+    disp('Creating eye_movement struct:')
+    [~,eye_movement] = GetEyeAnalysis(subject,prs,params,upperbnd,BELIEF);
+end
+
+
+for i = 1%:length(subject)
+    figure; set(gcf,'Position',[640 298 311 683]);
+           
+   for s = 2%:size(poolindx,2) 
        indx = 1:length(eye_movement{i,s}.eyepos.behvcorr.eye_err);
        
        avg_err = eye_movement{i,s}.eyepos.behvcorr.eye_err;
@@ -267,93 +282,116 @@ for i = 1:length(subject)
        ts = eye_movement{i,s}.eyepos.behvcorr.ts;
        target_off = eye_movement{i,s}.eyepos.target_off.indx;
        
-       for j = [217,220] %120:length(indx)
-           plot(eye_movement{i,s}.eyepos.pred.hor_mean.val{j},eye_movement{i,s}.eyepos.pred.ver_mean.val{j},'r--'); hold on;
-           plot(eye_movement{i,s}.eyepos.pred.hor_mean.val{j}(1),eye_movement{i,s}.eyepos.pred.ver_mean.val{j}(1),'ro','markersize',12);
-           plot(eye_movement{i,s}.eyepos.true.hor_mean.val{j},eye_movement{i,s}.eyepos.true.ver_mean.val{j},'k');
-           plot(eye_movement{i,s}.eyepos.true.hor_mean.val{j}(1),eye_movement{i,s}.eyepos.true.ver_mean.val{j}(1),'ko','markersize',12);
-           xlabel('HOR [deg]'); ylabel('VER [deg]'); title([subject(i).name ' - Trial ' num2str(j)]);
-           axis([-25 25 -50 0])
-           hold off;
+       for j = [152,153,155,164,165,260]%[217,220] %120:length(indx)
+%            plot(eye_movement{i,s}.eyepos.pred.hor_mean.val{j},eye_movement{i,s}.eyepos.pred.ver_mean.val{j},'r--'); hold on;
+%            plot(eye_movement{i,s}.eyepos.pred.hor_mean.val{j}(1),eye_movement{i,s}.eyepos.pred.ver_mean.val{j}(1),'ro','markersize',12);
+%            plot(eye_movement{i,s}.eyepos.true.hor_mean.val{j},eye_movement{i,s}.eyepos.true.ver_mean.val{j},'k');
+%            plot(eye_movement{i,s}.eyepos.true.hor_mean.val{j}(1),eye_movement{i,s}.eyepos.true.ver_mean.val{j}(1),'ko','markersize',12);
+%            xlabel('HOR [deg]'); ylabel('VER [deg]'); title([subject(i).name ' - Trial ' num2str(j)]);
+%            axis([-25 25 -50 0])
+%            hold off;
            
            if 1
-           hold on; colr = jet(length(eye_movement{i,s}.eyepos.true.hor_mean.val{j}));
-           for n = 1:length(eye_movement{i,s}.eyepos.true.hor_mean.val{j})
-               plot(eye_movement{i,s}.eyepos.true.hor_mean.val{j}(n),eye_movement{i,s}.eyepos.true.ver_mean.val{j}(n),'.','color',colr(n,:));
-               plot(eye_movement{i,s}.eyepos.pred.hor_mean.val{j}(n),eye_movement{i,s}.eyepos.pred.ver_mean.val{j}(n),'o','markeredgecolor',colr(n,:)*0.5);
-           end
-           colormap(colr); colorbar;
-           c = colorbar;
-           c.Label.String = 'time [s]';
+%            hold on; colr = jet(length(eye_movement{i,s}.eyepos.true.hor_mean.val{j}));
+%            for n = 1:length(eye_movement{i,s}.eyepos.true.hor_mean.val{j})
+%                plot(eye_movement{i,s}.eyepos.true.hor_mean.val{j}(n),eye_movement{i,s}.eyepos.true.ver_mean.val{j}(n),'.','color',colr(n,:));
+%                plot(eye_movement{i,s}.eyepos.pred.hor_mean.val{j}(n),eye_movement{i,s}.eyepos.pred.ver_mean.val{j}(n),'o','markeredgecolor',colr(n,:)*0.5);
+%            end
+%            colormap(colr); colorbar;
+%            c = colorbar;
+%            c.Label.String = 'time [s]';
+
+           clf; 
            
-           figure;
-           plot(ts,trl_err(:,j));hold on;
-           for  n = 1:length(eye_movement{i,s}.eyepos.true.hor_mean.val{j})
-               plot(ts(n),trl_err(n,j),'.','color',colr(n,:));
-           end
-           xlim([0 12]); ylim([0 60]); vline(target_off(j)*dt,'k--'); hline(avg_err(j));
+           ts1 = (1:numel(eye_movement{i,s}.eyepos.true.hor_mean.val{j}))*dt;
+           subplot(3,1,1); hold on;
+           plot(ts1, eye_movement{i,s}.eyepos.true.hor_mean.val{j},'k');
+           plot(ts1, eye_movement{i,s}.eyepos.pred.hor_mean.val{j},'color',[.5 .5 .5]);
+           xlim([0 12]); ylim([-10 30]); vline(target_off(j)*dt,'k--'); 
+           xlabel('time [s]'); ylabel('Horizontal pos. [deg]'); title([subject(i).name ' - Trial ' num2str(j)]);
+           
+           subplot(3,1,2); hold on;
+           plot(ts1, eye_movement{i,s}.eyepos.true.ver_mean.val{j},'k');
+           plot(ts1, eye_movement{i,s}.eyepos.pred.ver_mean.val{j},'color',[.5 .5 .5]);
+           xlim([0 12]); ylim([-50 10]); vline(target_off(j)*dt,'k--'); 
+           xlabel('time [s]'); ylabel('Vertical pos. [deg]'); title([subject(i).name ' - Trial ' num2str(j)]);
+           
+           
+           subplot(3,1,3); hold on;
+           err = sqrt((eye_movement{i,s}.eyepos.true.hor_mean.val{j}-eye_movement{i,s}.eyepos.pred.hor_mean.val{j}).^2 + (eye_movement{i,s}.eyepos.true.ver_mean.val{j}-eye_movement{i,s}.eyepos.pred.ver_mean.val{j}).^2);
+           plot(ts1, err,'r');
+
+%            plot(ts,trl_err(:,j));hold on;
+%            for  n = 1:length(eye_movement{i,s}.eyepos.true.hor_mean.val{j})
+%                plot(ts(n),trl_err(n,j),'.','color',colr(n,:));
+%            end
+           xlim([0 12]); ylim([0 40]); vline(target_off(j)*dt,'k--'); hline(avg_err(j));
            xlabel('time [s]'); ylabel('Eye-tracking error [deg]'); title([subject(i).name ' - Trial ' num2str(j)]);
            end
-
+        pause(2);
        end
    end
 end
 %% Predicted vs Observed eye position (when target goes OFF)
-params = [];
-[poolindx,legend_input] = get_poolindx(subject,params);
-colr = brewermap(size(poolindx,2),'Dark2');
-default_prs; upperbnd = 0; BELIEF = 0; 
-prs.boots = 0; 
-[poolindx,legend_input] = get_poolindx(subject,params);
-if 0
-[~,eye_movementALL] = GetEyeAnalysis(subject,prs,params,upperbnd,BELIEF);
-end
-plt = 0;
-rho = []; pval = [];
-Nsamples = 1; % nsamples
-dt = 1/60;
-for i = 1:length(subject) % [6 12 14]
-    if plt; figure; end
-    for s = 1:size(poolindx,2)
-        N = length(eye_movementALL{i,s}.eyepos.pred.ver_mean.val);
-        PredPosZ = [];  PredPosY = [];  TruePosZ = [];  TruePosY = [];
-        for j = 1:N
-            % target off index
-            ind = eye_movementALL{i,s}.eyepos.target_off.indx(j);
-            if ind < 1;    ind = 1;    end
-            PredPosZ(j) = eye_movementALL{i,s}.eyepos.pred.ver_mean.val{j}(ind);  PredPosY(j) = eye_movementALL{i,s}.eyepos.pred.hor_mean.val{j}(ind);
-            TruePosZ(j) = eye_movementALL{i,s}.eyepos.true.ver_mean.val{j}(ind);  TruePosY(j) = eye_movementALL{i,s}.eyepos.true.hor_mean.val{j}(ind);
-%             plot(PredPosZ,'b--');  hold on;   plot(TruePosZ,'b');  plot(PredPosY,'k--');  plot(TruePosY,'k');   hold off;
-        end
-        [rho.z(i,s),pval.z(i,s)] = nancorr(PredPosZ(:),TruePosZ(:));
-        [rho.y(i,s),pval.y(i,s)] = nancorr(PredPosY(:),TruePosY(:));       
-        if plt
-        subplot(2,size(poolindx,2),s); hold on;   axis equal;   xlim([-25 5]);  ylim([-25 5]);   
-        plot(PredPosZ,TruePosZ,'.','Color',colr(s,:),'MarkerSize',3);  
-        plot(-30:30,-30:30,'k--'); xlabel('Predicted [deg]');  ylabel('Observed [deg]');
-        title('Vertical');    legend(legend_input{s});
-        vline(0,'k');    hline(0,'k');   
-        
-        subplot(2,size(poolindx,2),s+size(poolindx,2)); hold on;  axis equal;   xlim([-40 40]);  ylim([-40 40]);    
-        plot(PredPosY,TruePosY,'.','Color',colr(s,:),'MarkerSize',3);  
-        plot(-30:30,-30:30,'k--');  xlabel('Predicted [deg]');  ylabel('Observed [deg]');
-        title('Horizontal');    vline(0,'k');    hline(0,'k');
-        end
-    end
-    if plt;  sgtitle(subject(i).name)  ; end
-end
-rho.y(rho.y==0) = []; rho.z(rho.z==0) = [];
-version_mu = mean(rho.y)
-version_sd = std(rho.y)
-elevation_mu = mean(rho.z)
-elevation_sd = std(rho.z)
+% params = [];
+% [poolindx,legend_input] = get_poolindx(subject,params);
+% colr = brewermap(size(poolindx,2),'Dark2');
+% default_prs; upperbnd = 0; BELIEF = 0; 
+% prs.boots = 0; 
+% [poolindx,legend_input] = get_poolindx(subject,params);
+% if 0
+%     disp('Creating eye_movementALL struct:')
+% [~,eye_movementALL] = GetEyeAnalysis(subject,prs,params,upperbnd,BELIEF);
+% end
+% 
+% plt = 0;
+% rho = []; pval = [];
+% Nsamples = 1; % nsamples
+% dt = 1/60;
+% for i = 1:length(subject) % [6 12 14]
+%     if plt; figure; end
+%     for s = 1:size(poolindx,2)
+%         N = length(eye_movementALL{i,s}.eyepos.pred.ver_mean.val);
+%         PredPosZ = [];  PredPosY = [];  TruePosZ = [];  TruePosY = [];
+%         for j = 1:N
+%             % target off index
+%             ind = eye_movementALL{i,s}.eyepos.target_off.indx(j);
+%             if ind < 1;    ind = 1;    end
+%             PredPosZ(j) = eye_movementALL{i,s}.eyepos.pred.ver_mean.val{j}(ind);  PredPosY(j) = eye_movementALL{i,s}.eyepos.pred.hor_mean.val{j}(ind);
+%             TruePosZ(j) = eye_movementALL{i,s}.eyepos.true.ver_mean.val{j}(ind);  TruePosY(j) = eye_movementALL{i,s}.eyepos.true.hor_mean.val{j}(ind);
+% %             plot(PredPosZ,'b--');  hold on;   plot(TruePosZ,'b');  plot(PredPosY,'k--');  plot(TruePosY,'k');   hold off;
+%         end
+%         [rho.z(i,s),pval.z(i,s)] = nancorr(PredPosZ(:),TruePosZ(:));
+%         [rho.y(i,s),pval.y(i,s)] = nancorr(PredPosY(:),TruePosY(:));       
+%         if plt
+%         subplot(2,size(poolindx,2),s); hold on;   axis equal;   xlim([-25 5]);  ylim([-25 5]);   
+%         plot(PredPosZ,TruePosZ,'.','Color',colr(s,:),'MarkerSize',3);  
+%         plot(-30:30,-30:30,'k--'); xlabel('Predicted [deg]');  ylabel('Observed [deg]');
+%         title('Vertical');    legend(legend_input{s});
+%         vline(0,'k');    hline(0,'k');   
+%         
+%         subplot(2,size(poolindx,2),s+size(poolindx,2)); hold on;  axis equal;   xlim([-40 40]);  ylim([-40 40]);    
+%         plot(PredPosY,TruePosY,'.','Color',colr(s,:),'MarkerSize',3);  
+%         plot(-30:30,-30:30,'k--');  xlabel('Predicted [deg]');  ylabel('Observed [deg]');
+%         title('Horizontal');    vline(0,'k');    hline(0,'k');
+%         end
+%     end
+%     if plt;  sgtitle(subject(i).name)  ; end
+% end
+% rho.y(rho.y==0) = []; rho.z(rho.z==0) = [];
+% version_mu = mean(rho.y)
+% version_sd = std(rho.y)
+% elevation_mu = mean(rho.z)
+% elevation_sd = std(rho.z)
 %% Time course of lateral version and elevation
             % Lateral version converges to 0 faster for vestibular,
             % consistent with undershooting angular bias
 sac_pad = .3; % seconds
 si = 1/dt;  ei = 12/dt;
 SDthresh = 1;
-for i = [1 6 7 15]
+colr = brewermap(Nstim+1,'Set1'); colr(3,:) = []; % red, blue, purple
+
+for i = 1 % [1 6 7 15]
     figure;
     for s = 1:size(poolindx,2)
         indx = poolindx{i,s};
@@ -405,13 +443,14 @@ for i = [1 6 7 15]
 end
 
 % correlation of observed and predicted eye position over time
-default_prs; upperbnd = 0; BELIEF = 0; 
-prs.boots = 0; 
-params1 = 'stimtype';
-[poolindx,legend_input] = get_poolindx(subject,params1);
-if 0
-[eye_fixation,eye_movement] = GetEyeAnalysis(subject,prs,params1,upperbnd,BELIEF);
-end
+% default_prs; upperbnd = 0; BELIEF = 0; 
+% prs.boots = 0; 
+% params1 = 'stimtype';
+% [poolindx,legend_input] = get_poolindx(subject,params1);
+% if 0
+%     disp('Creating eye_movement struct:')
+%     [~,eye_movement] = GetEyeAnalysis(subject,prs,params1,upperbnd,BELIEF);
+% end
 
 for i = 1:length(subject)
    for s = 1:size(poolindx,2) 
@@ -428,7 +467,7 @@ for i = 1:length(subject)
 end
 
 %% Regression of actual vs predicted eye positions when target OFF
-tracking = tracking_regular_all(keepindx);
+tracking = tracking_regular_all;
 Nsubs = numel(tracking);
 
 bV = []; bH = [];
@@ -440,64 +479,61 @@ for i = 1:Nsubs
     bV{i} = regress(vereye(:),[vertar(:) ones(numel(vertar),1)]);
     bH{i} = regress(horeye(:),[hortar(:) ones(numel(hortar),1)]);
     
-    if 1
-    figure; 
-    subplot(1,2,1); hold on;
-    plot(hortar,horeye,'.','color',[.5 .5 .5]); plot(-40:40,-40:40,'k--'); plot(-40:40,bH{i}(1)*(-40:40),'r','linewidth',2);
-    vline(0,'k'); hline(0,'k'); axis equal; axis([-40 40 -40 40]); xlabel('Predicted [deg]'); ylabel('Actual [deg]'); title('Horizontal');
-    
-    subplot(1,2,2); hold on;
-    plot(vertar,vereye,'.','color',[.5 .5 .5]); plot(-30:0,-30:0,'k--'); plot(-30:0,bV{i}(1)*(-30:0),'r','linewidth',2); 
-    vline(0,'k'); hline(0,'k'); axis equal; axis([-30 10 -30 10]); xlabel('Predicted [deg]'); ylabel('Actual [deg]'); title('Vertical');
-    end
+%     if 0
+%     figure; 
+%     subplot(1,2,1); hold on;
+%     plot(hortar,horeye,'.','color',[.5 .5 .5]); plot(-40:40,-40:40,'k--'); plot(-40:40,bH{i}(1)*(-40:40),'r','linewidth',2);
+%     vline(0,'k'); hline(0,'k'); axis equal; axis([-40 40 -40 40]); xlabel('Predicted [deg]'); ylabel('Actual [deg]'); title('Horizontal');
+%     
+%     subplot(1,2,2); hold on;
+%     plot(vertar,vereye,'.','color',[.5 .5 .5]); plot(-30:0,-30:0,'k--'); plot(-30:0,bV{i}(1)*(-30:0),'r','linewidth',2); 
+%     vline(0,'k'); hline(0,'k'); axis equal; axis([-30 10 -30 10]); xlabel('Predicted [deg]'); ylabel('Actual [deg]'); title('Vertical');
+%     end
 end
 %% Target tracking error when target OFF
-subject = subject_backup;
-default_prs;
-outlier_thresh = 25;
-subindx = keepindx;
-Nsubs = numel(subindx);
-
-
-Nboots = 100;
-all_err = [];
-for i = 1:Nsubs
-    indx = cell2mat(cellfun(@(x) abs(x.eyepos.error.targ.all(:,1)) < outlier_thresh, tracking_regular_all(subindx(i)),'un',0));
-    errors = cell2mat(cellfun(@(x) x.eyepos.error.targ.all(indx,1)', tracking_regular_all(subindx(i)),'un',0));
-    
-    ntrls = length(errors);
-    for n = 1:Nboots
-    randindx = randsample(ntrls,ntrls,1);
-    all_err(n,i) = nanmean(errors(randindx));
-    end
-end
-allerr.se = arrayfun(@(i) nanstd(all_err(:,i)), 1:Nsubs);
-allerr.mu = arrayfun(@(i) nanmean(all_err(:,i)), 1:Nsubs);
-
-% chance level
-tracking_all = tracking_regular_all(keepindx,:);
-eye_hor_shuffled = cellfun(@(x) x.eyepos.screen.hor_mean(randi(size(x.eyepos.screen.hor_mean,1),size(x.eyepos.screen.hor_mean,1),1),1),tracking_all,'un',0);
-eye_ver_shuffled = cellfun(@(x) x.eyepos.screen.ver_mean(randi(size(x.eyepos.screen.ver_mean,1),size(x.eyepos.screen.ver_mean,1),1),1),tracking_all,'un',0);
-tar_hor_shuffled = cellfun(@(x) x.tarpos.screen.hor_mean(randi(size(x.tarpos.screen.hor_mean,1),size(x.tarpos.screen.hor_mean,1),1),1),tracking_all,'un',0);
-tar_ver_shuffled = cellfun(@(x) x.tarpos.screen.ver_mean(randi(size(x.tarpos.screen.ver_mean,1),size(x.tarpos.screen.ver_mean,1),1),1),tracking_all,'un',0);
-err_all_time_shuffled = cell2mat(cellfun(@(x1,x2,y1,y2) nanmean(sqrt((x1-x2).^2 + (y1-y2).^2)),eye_hor_shuffled,tar_hor_shuffled,eye_ver_shuffled,tar_ver_shuffled,'un',0));
-% mean error
-tracking_all = tracking_distperc(keepindx,:);
-errors_mu_ves = nanmean((cellfun(@(x) nanmean(nanmean(x.eyepos.error.targ.all(:,3:end),2)), tracking_all(:,1))));
-errors_mu_vis = nanmean((cellfun(@(x) nanmean(nanmean(x.eyepos.error.targ.all(:,3:end),2)), tracking_all(:,2))));
+% default_prs;
+% outlier_thresh = 25;
+% Nsubs = numel(subject);
+% 
+% 
+% Nboots = 100;
+% all_err = [];
+% for i = 1:Nsubs
+%     indx = cell2mat(cellfun(@(x) abs(x.eyepos.error.targ.all(:,1)) < outlier_thresh, tracking_regular_all(i),'un',0));
+%     errors = cell2mat(cellfun(@(x) x.eyepos.error.targ.all(indx,1)', tracking_regular_all(i),'un',0));
+%     
+%     ntrls = length(errors);
+%     for n = 1:Nboots
+%     randindx = randsample(ntrls,ntrls,1);
+%     all_err(n,i) = nanmean(errors(randindx));
+%     end
+% end
+% allerr.se = arrayfun(@(i) nanstd(all_err(:,i)), 1:Nsubs);
+% allerr.mu = arrayfun(@(i) nanmean(all_err(:,i)), 1:Nsubs);
+% 
+% % chance level
+% tracking_all = tracking_regular_all;
+% eye_hor_shuffled = cellfun(@(x) x.eyepos.screen.hor_mean(randi(size(x.eyepos.screen.hor_mean,1),size(x.eyepos.screen.hor_mean,1),1),1),tracking_all,'un',0);
+% eye_ver_shuffled = cellfun(@(x) x.eyepos.screen.ver_mean(randi(size(x.eyepos.screen.ver_mean,1),size(x.eyepos.screen.ver_mean,1),1),1),tracking_all,'un',0);
+% tar_hor_shuffled = cellfun(@(x) x.tarpos.screen.hor_mean(randi(size(x.tarpos.screen.hor_mean,1),size(x.tarpos.screen.hor_mean,1),1),1),tracking_all,'un',0);
+% tar_ver_shuffled = cellfun(@(x) x.tarpos.screen.ver_mean(randi(size(x.tarpos.screen.ver_mean,1),size(x.tarpos.screen.ver_mean,1),1),1),tracking_all,'un',0);
+% err_all_time_shuffled = cell2mat(cellfun(@(x1,x2,y1,y2) nanmean(sqrt((x1-x2).^2 + (y1-y2).^2)),eye_hor_shuffled,tar_hor_shuffled,eye_ver_shuffled,tar_ver_shuffled,'un',0));
+% % mean error
+% tracking_all = tracking_distperc;
+% errors_mu_ves = nanmean((cellfun(@(x) nanmean(nanmean(x.eyepos.error.targ.all(:,3:end),2)), tracking_all(:,1))));
+% errors_mu_vis = nanmean((cellfun(@(x) nanmean(nanmean(x.eyepos.error.targ.all(:,3:end),2)), tracking_all(:,2))));
 
 % figure; errorbar(1:Nsubs,allerr.mu,allerr.se,'s','color','k','markerfacecolor','k','linestyle','none','capsize',0); axis([0 Nsubs+1 0 30]);
 % xlabel('Subjects'); ylabel('Target-tracking error [deg]'); title('Target OFF');
 
-figure; hold on;
-bar(1,nanmean(allerr.mu),'facecolor',[.5 .5 .5]); hline(nanmean(err_all_time_shuffled(:,1)),'k-');
-plot(1+0.1*randn(numel(allerr.mu),1),allerr.mu,'ko','markerfacecolor','k'); 
-hline(errors_mu_ves,'r'); hline(errors_mu_vis,'b'); ylim([0 30]);
-ylabel('Target-tracking error [deg]'); title('Target OFF');
+% if 0
+%     figure; hold on;
+%     bar(1,nanmean(allerr.mu),'facecolor',[.5 .5 .5]); hline(nanmean(err_all_time_shuffled(:,1)),'k-');
+%     plot(1+0.1*randn(numel(allerr.mu),1),allerr.mu,'ko','markerfacecolor','k');
+%     hline(errors_mu_ves,'r'); hline(errors_mu_vis,'b'); ylim([0 30]);
+%     ylabel('Target-tracking error [deg]'); title('Target OFF');
+% end
 
-if 0
-    keepindx1 = setdiff(1:numel(subject),find(allerr.mu > 10));
-end
 %% Average target tracking error over time and distance %
 all_subs = 0;
 tracking = tracking_regular; % tracking_regular(keepindx,:);
@@ -505,43 +541,43 @@ Nsubs = size(tracking,1);
 Nstim = size(tracking,2);
 minlength = min(cellfun(@(x) size(x.eyepos.error.targ.all,2),tracking),[],'all');
 ts = (1:minlength)/60;
-for s = 1:Nstim
-    err_all_time{s} = cell2mat(cellfun(@(x) nanmean(x.eyepos.error.targ.all(:,1:minlength)),tracking(:,s),'un',0));
-end
-% chance level
-rng(0);
-tracking_all = tracking_regular_all;%(keepindx,:);
-eye_hor_shuffled = cellfun(@(x) x.eyepos.screen.hor_mean(randi(size(x.eyepos.screen.hor_mean,1),size(x.eyepos.screen.hor_mean,1),1),1:minlength),tracking_all,'un',0);
-eye_ver_shuffled = cellfun(@(x) x.eyepos.screen.ver_mean(randi(size(x.eyepos.screen.ver_mean,1),size(x.eyepos.screen.ver_mean,1),1),1:minlength),tracking_all,'un',0);
-tar_hor_shuffled = cellfun(@(x) x.eyepos.screen.hor_mean(randi(size(x.tarpos.screen.hor_mean,1),size(x.tarpos.screen.hor_mean,1),1),1:minlength),tracking_all,'un',0);
-tar_ver_shuffled = cellfun(@(x) x.eyepos.screen.ver_mean(randi(size(x.tarpos.screen.ver_mean,1),size(x.tarpos.screen.ver_mean,1),1),1:minlength),tracking_all,'un',0);
-
-err_all_time_shuffled = cell2mat(cellfun(@(x1,x2,y1,y2) nanmean(sqrt((x1-x2).^2 + (y1-y2).^2)),eye_hor_shuffled,tar_hor_shuffled,eye_ver_shuffled,tar_ver_shuffled,'un',0));
-
-colr = brewermap(Nstim+1,'Set1'); colr(3,:) = []; % red, blue, purple
-figure; subplot(1,2,1); hold on;
-if all_subs
-    arrayfun(@(s) plot(ts,[err_all_time{s}],'color',colr(s,:)),1:Nstim);
-else
-    arrayfun(@(s) shadedErrorBar(ts,nanmean(err_all_time{s}),nanstd(err_all_time{s})./sqrt(Nsubs),'lineprops',{'color',colr(s,:)}), 1:Nstim);
-end
-plot(ts,nanmean(err_all_time_shuffled),'-k');
-xlabel('time [s]'); ylabel('target tracking error [deg]'); title('Time');
-axis([0 12 0 40]); legend({'vestibular','visual','combined'},'location','southeast');
-
-% normalized plot
-subplot(1,2,2); hold on;
-if all_subs
-    arrayfun(@(s) plot(ts,[err_all_time{s}./nanmean(err_all_time_shuffled)],'color',colr(s,:)),1:Nstim)
-else
-    arrayfun(@(s) shadedErrorBar(ts,nanmean(err_all_time{s}./nanmean(err_all_time_shuffled)),nanstd(err_all_time{s})./sqrt(Nsubs)./nanmean(err_all_time_shuffled),'lineprops',{'color',colr(s,:)}), 1:Nstim);
-end
-hline(1,'k-');
-xlabel('time [s]'); ylabel('normalized TTE'); title('Time');
-axis([0 12 0 2]); legend({'vestibular','visual','combined'},'location','southeast');
+% for s = 1:Nstim
+%     err_all_time{s} = cell2mat(cellfun(@(x) nanmean(x.eyepos.error.targ.all(:,1:minlength)),tracking(:,s),'un',0));
+% end
+% % chance level
+% rng(0);
+% tracking_all = tracking_regular_all;%(keepindx,:);
+% eye_hor_shuffled = cellfun(@(x) x.eyepos.screen.hor_mean(randi(size(x.eyepos.screen.hor_mean,1),size(x.eyepos.screen.hor_mean,1),1),1:minlength),tracking_all,'un',0);
+% eye_ver_shuffled = cellfun(@(x) x.eyepos.screen.ver_mean(randi(size(x.eyepos.screen.ver_mean,1),size(x.eyepos.screen.ver_mean,1),1),1:minlength),tracking_all,'un',0);
+% tar_hor_shuffled = cellfun(@(x) x.eyepos.screen.hor_mean(randi(size(x.tarpos.screen.hor_mean,1),size(x.tarpos.screen.hor_mean,1),1),1:minlength),tracking_all,'un',0);
+% tar_ver_shuffled = cellfun(@(x) x.eyepos.screen.ver_mean(randi(size(x.tarpos.screen.ver_mean,1),size(x.tarpos.screen.ver_mean,1),1),1:minlength),tracking_all,'un',0);
+% 
+% err_all_time_shuffled = cell2mat(cellfun(@(x1,x2,y1,y2) nanmean(sqrt((x1-x2).^2 + (y1-y2).^2)),eye_hor_shuffled,tar_hor_shuffled,eye_ver_shuffled,tar_ver_shuffled,'un',0));
+% 
+% colr = brewermap(Nstim+1,'Set1'); colr(3,:) = []; % red, blue, purple
+% figure; subplot(1,2,1); hold on;
+% if all_subs
+%     arrayfun(@(s) plot(ts,[err_all_time{s}],'color',colr(s,:)),1:Nstim);
+% else
+%     arrayfun(@(s) shadedErrorBar(ts,nanmean(err_all_time{s}),nanstd(err_all_time{s})./sqrt(Nsubs),'lineprops',{'color',colr(s,:)}), 1:Nstim);
+% end
+% plot(ts,nanmean(err_all_time_shuffled),'-k');
+% xlabel('time [s]'); ylabel('target tracking error [deg]'); title('Time');
+% axis([0 12 0 40]); legend({'vestibular','visual','combined'},'location','southeast');
+% 
+% % normalized plot
+% subplot(1,2,2); hold on;
+% if all_subs
+%     arrayfun(@(s) plot(ts,[err_all_time{s}./nanmean(err_all_time_shuffled)],'color',colr(s,:)),1:Nstim)
+% else
+%     arrayfun(@(s) shadedErrorBar(ts,nanmean(err_all_time{s}./nanmean(err_all_time_shuffled)),nanstd(err_all_time{s})./sqrt(Nsubs)./nanmean(err_all_time_shuffled),'lineprops',{'color',colr(s,:)}), 1:Nstim);
+% end
+% hline(1,'k-');
+% xlabel('time [s]'); ylabel('normalized TTE'); title('Time');
+% axis([0 12 0 2]); legend({'vestibular','visual','combined'},'location','southeast');
 
 % distance %
-tracking = tracking_distperc(keepindx,:);
+tracking = tracking_distperc;
 Nsubs = size(tracking,1);
 Nstim = size(tracking,2);
 minlength = min(cellfun(@(x) size(x.eyepos.error.targ.all,2),tracking),[],'all');
@@ -597,38 +633,38 @@ plevel = 0.05;
 refplane = 'screen';
 
 % [rho,pval] = SteeringVsTrackingError(tracking_regular(keepindx,:),refplane);
-[rho,pval] = SteeringVsTrackingError(tracking_distperc(keepindx,:),refplane);
+[rho,pval] = SteeringVsTrackingError(tracking_distperc,refplane);
 
 [Rsignif,peakind] = PeakCorrSignificance1(rho,pval,plevel); nansum(Rsignif)
 
 %% Multiple regression between eye & target/stop positions
 
-[multi,ts] = EyePositionMultiRegr(tracking_distperc(keepindx,:));
+[multi,ts] = EyePositionMultiRegr(tracking_distperc);
 
 % Average of both components' coefficients
 colr = brewermap(Nstim+1,'Set1'); colr(3,:) = []; % red, blue, purple
 
-figure('name','Multiple Regression (average)','numbertitle','off');
-for s = 1:Nstim
-    % average
-    Nt = numel(ts);
-    b_targpos_mu = movmedian(mean([mean(multi.hor.targ{s}) ; mean(multi.ver.targ{s})]),10); b_targpos_mu(Nt-15:Nt) = nan;
-    b_targpos_se = mean([std(multi.hor.targ{s})/sqrt(Nsubs) ; std(multi.ver.targ{s})/sqrt(Nsubs)]); b_targpos_se(Nt-15:Nt) = nan;
-    
-    b_stoppos_mu = movmedian(mean([mean(multi.hor.stop{s}) ; mean(multi.ver.stop{s})]),10); b_stoppos_mu(Nt-15:Nt) = nan;
-    b_stoppos_se = mean([std(multi.hor.stop{s})/sqrt(Nsubs) ; std(multi.ver.stop{s})/sqrt(Nsubs)]); b_stoppos_se(Nt-15:Nt) = nan;
-
-    subplot(1,Nstim,s); hold on;
-    shadedErrorBar(ts,b_targpos_mu,b_targpos_se,'lineprops',{'color',colr(s,:)});
-    shadedErrorBar(ts,b_stoppos_mu,b_stoppos_se,'lineprops',{'color',colr(s,:)*0.5});
-    xlabel(xaxislabel); ylabel('regression coef.'); axis([xaxislim -0.2 1.2]);   hline(1,'k--');
-    legend('target position','stop position');
-    title('average');
-end
-
+% figure('name','Multiple Regression (average)','numbertitle','off');
+% for s = 1:Nstim
+%     % average
+%     Nt = numel(ts);
+%     b_targpos_mu = movmedian(mean([mean(multi.hor.targ{s}) ; mean(multi.ver.targ{s})]),10); b_targpos_mu(Nt-15:Nt) = nan;
+%     b_targpos_se = mean([std(multi.hor.targ{s})/sqrt(Nsubs) ; std(multi.ver.targ{s})/sqrt(Nsubs)]); b_targpos_se(Nt-15:Nt) = nan;
+%     
+%     b_stoppos_mu = movmedian(mean([mean(multi.hor.stop{s}) ; mean(multi.ver.stop{s})]),10); b_stoppos_mu(Nt-15:Nt) = nan;
+%     b_stoppos_se = mean([std(multi.hor.stop{s})/sqrt(Nsubs) ; std(multi.ver.stop{s})/sqrt(Nsubs)]); b_stoppos_se(Nt-15:Nt) = nan;
+% 
+%     subplot(1,Nstim,s); hold on;
+%     shadedErrorBar(ts,b_targpos_mu,b_targpos_se,'lineprops',{'color',colr(s,:)});
+%     shadedErrorBar(ts,b_stoppos_mu,b_stoppos_se,'lineprops',{'color',colr(s,:)*0.5});
+%     xlabel(xaxislabel); ylabel('regression coef.'); axis([xaxislim -0.2 1.2]);   hline(1,'k--');
+%     legend('target position','stop position');
+%     title('average');
+% end
+% 
 %% Generate target belief over time
 dt=1/60;
-tracking = tracking_distperc(keepindx,:); %tracking_distperc;
+tracking = tracking_distperc; %tracking_distperc;
 [multi,ts_distperc] = EyePositionMultiRegr(tracking);
 close;
 
@@ -702,17 +738,17 @@ if any(struct_indx)
 end
 
 %% Saccade Probability
-saccade = saccade_all(keepindx,:);
+saccade = saccade_all;
 
 SaccadeProbability(saccade);
 
 %% Saccade amplitude for different trial epochs (Target ON, Steering, End of Trial)
-saccade = saccade_all(keepindx,:);
+saccade = saccade_all;
 
 SaccadeAmplitude_Epochs(saccade);
 
 %% Regression KERNEL of saccade amplitude vs tracking errors (target, stop, belief) +++++++IN ANALYSIS+++++++
-saccade = saccade_all(keepindx,:);
+saccade = saccade_all;
 type_regr = 'linear';
 quantity = 'multi';
 split_grp = 0;
@@ -747,8 +783,7 @@ disp(['combined: ' num2str(peak_mu(3)) char(177) num2str(peak_se(3))]); disp(' '
 end
 
 %% Sum of saccades vs steering errors correlation
-keepindx = [1 2 7 9 10 12 13 14];
-saccade = saccade_all(keepindx,:);
+saccade = saccade_all;
 
 Nsubs = size(saccade,1);
 Nstim = size(saccade,2);
@@ -850,6 +885,7 @@ for s = 1:Nstim
 [~,p_ttest(s)] = ttest(th_corr(:,s));
 bar(s,mean(th_corr(:,s)),'edgecolor','none','facecolor',colr(s,:)); 
 errorbar(s,mean(th_corr(:,s)),std(th_corr(:,s))./sqrt(Nsubs),'k','capsize',0)
+scatter(repmat(s, Nsubs, 1), th_corr(:,s), 15, 'k', 'filled','jitter', 'on', 'jitterAmount', 0.1,'MarkerFaceAlpha', 0.5);
 xticks(1:Nstim); xticklabels({'vestibular','visual','combined'}); ylabel('corr. coefficient'); ylim([-0.1 0.5]);
 title('sum of saccades vs steering errors');
 
@@ -861,65 +897,63 @@ end
 end
 
 %% Early saturation of angular errors in vestibular condition (MIGHT NEED FOR SUPPLEMENTAL!!!) +++++++++++++++++++++++++
-keepindx = [1 2 7 9 10 12 13 14];
-subject = subject_backup(keepindx);
-params = 'stimtype';
-[poolindx,legend_input] = get_poolindx(subject,params);
-Nsubs = length(subject);
-Nstim = size(poolindx,2);
-
-maxlength = round(15/dt); % 15 seconds
-straight_thresh = 10;
-nanwin = 150;
-nanthresh = 0.3;
-
-colr = brewermap(Nstim+1,'Set1'); colr(3,:) = []; % red, blue, purple
-figure;
-th_ratio = []; h = []; p = [];
-for i = 1:Nsubs
-    clf;
-    for s = 1:Nstim-1
-        trlindx = poolindx{i,s};
-        % endpoints
-        x_sub = arrayfun(@(x) x.continuous.xmp(end)-x.continuous.xmp(1), subject(i).trials(trlindx));
-        y_sub = arrayfun(@(x) x.continuous.ymp(end)-x.continuous.ymp(1), subject(i).trials(trlindx));
-        [r_sub,th_sub] = cart2polarY(x_sub,y_sub);
-        th_sub(abs(th_sub)<straight_thresh) = nan; % remove straight ahead targets
-        
-        % trajectories
-        x_sub_traj = arrayfun(@(x) [x.continuous.xmp-x.continuous.xmp(1) ; nan(maxlength-numel(x.continuous.ts),1)], subject(i).trials(trlindx),'un',0);
-        y_sub_traj = arrayfun(@(x) [x.continuous.ymp-x.continuous.ymp(1) ; nan(maxlength-numel(x.continuous.ts),1)], subject(i).trials(trlindx),'un',0);
-        [r_sub_traj,th_sub_traj] = cellfun(@(x,y) cart2polarY(x,y),x_sub_traj,y_sub_traj,'un',0);
-        th_sub_traj = cellfun(@(x,xe) nanify(x, find(abs(x(1:nanwin)) > nanthresh*xe)), th_sub_traj, num2cell(th_sub),'un',0); % correct for artifacts at trial start
-        th_sub_traj = cellfun(@(x,xe) nanify(x, find(abs(x) > 1.2*xe)), th_sub_traj, num2cell(th_sub),'un',0); % clip for rest of artifacts
-        
-        % remove bad trials
-        rmindx = cellfun(@(x) sum(isnan(x))/numel(x) > 0.4, th_sub_traj);
-        th_sub_traj(rmindx) = [];
-        th_sub(rmindx) = [];
-        
-        % take ratio
-        th_ratio_tmp = cellfun(@(x,xe) abs(x(1:maxlength)/xe), th_sub_traj, num2cell(th_sub),'un',0);
-    
-        ts = (1:maxlength)*dt;
-        
-        hold on;
-        shadedErrorBar(ts,nanmean([th_ratio_tmp{:}],2),nanstd([th_ratio_tmp{:}],[],2),'lineprops',{'color',colr(s,:)})
-        xlabel('time [s]'); ylabel('\theta_{t}\\\theta_{final}');
-        
-        th_ratio{i,s} = th_ratio_tmp;
-    end
-    suptitle(subject(i).name);
-end
-
-figure; hold on; plot(th_ratio_50(:,1),th_ratio_50(:,2),'+','color',[.5 .5 .5]); plot(0:10,0:10,'k--');
-xlabel('vestibular'); ylabel('visual'); title('rotation_{50}');axis equal;axis([2 8 2 8]);
-
-th_ratio_mu = cellfun(@(x) nanmean([x{:}],2),th_ratio,'un',0);
-th_ratio_50_indx = cellfun(@(x) find(x > 0.5, 1), th_ratio_mu);
-th_ratio_50 = ts(th_ratio_50_indx);
-
-[h,p] = ttest(th_ratio_50(:,1),th_ratio_50(:,2));
+% params = 'stimtype';
+% [poolindx,legend_input] = get_poolindx(subject,params);
+% Nsubs = length(subject);
+% Nstim = size(poolindx,2);
+% 
+% maxlength = round(15/dt); % 15 seconds
+% straight_thresh = 10;
+% nanwin = 150;
+% nanthresh = 0.3;
+% 
+% colr = brewermap(Nstim+1,'Set1'); colr(3,:) = []; % red, blue, purple
+% figure;
+% th_ratio = []; h = []; p = [];
+% for i = 1:Nsubs
+%     clf;
+%     for s = 1:Nstim-1
+%         trlindx = poolindx{i,s};
+%         % endpoints
+%         x_sub = arrayfun(@(x) x.continuous.xmp(end)-x.continuous.xmp(1), subject(i).trials(trlindx));
+%         y_sub = arrayfun(@(x) x.continuous.ymp(end)-x.continuous.ymp(1), subject(i).trials(trlindx));
+%         [r_sub,th_sub] = cart2polarY(x_sub,y_sub);
+%         th_sub(abs(th_sub)<straight_thresh) = nan; % remove straight ahead targets
+%         
+%         % trajectories
+%         x_sub_traj = arrayfun(@(x) [x.continuous.xmp-x.continuous.xmp(1) ; nan(maxlength-numel(x.continuous.ts),1)], subject(i).trials(trlindx),'un',0);
+%         y_sub_traj = arrayfun(@(x) [x.continuous.ymp-x.continuous.ymp(1) ; nan(maxlength-numel(x.continuous.ts),1)], subject(i).trials(trlindx),'un',0);
+%         [r_sub_traj,th_sub_traj] = cellfun(@(x,y) cart2polarY(x,y),x_sub_traj,y_sub_traj,'un',0);
+%         th_sub_traj = cellfun(@(x,xe) nanify(x, find(abs(x(1:nanwin)) > nanthresh*xe)), th_sub_traj, num2cell(th_sub),'un',0); % correct for artifacts at trial start
+%         th_sub_traj = cellfun(@(x,xe) nanify(x, find(abs(x) > 1.2*xe)), th_sub_traj, num2cell(th_sub),'un',0); % clip for rest of artifacts
+%         
+%         % remove bad trials
+%         rmindx = cellfun(@(x) sum(isnan(x))/numel(x) > 0.4, th_sub_traj);
+%         th_sub_traj(rmindx) = [];
+%         th_sub(rmindx) = [];
+%         
+%         % take ratio
+%         th_ratio_tmp = cellfun(@(x,xe) abs(x(1:maxlength)/xe), th_sub_traj, num2cell(th_sub),'un',0);
+%     
+%         ts = (1:maxlength)*dt;
+%         
+%         hold on;
+%         shadedErrorBar(ts,nanmean([th_ratio_tmp{:}],2),nanstd([th_ratio_tmp{:}],[],2),'lineprops',{'color',colr(s,:)})
+%         xlabel('time [s]'); ylabel('\theta_{t}\\\theta_{final}');
+%         
+%         th_ratio{i,s} = th_ratio_tmp;
+%     end
+%     sgtitle(subject(i).name);
+% end
+% 
+% figure; hold on; plot(th_ratio_50(:,1),th_ratio_50(:,2),'+','color',[.5 .5 .5]); plot(0:10,0:10,'k--');
+% xlabel('vestibular'); ylabel('visual'); title('rotation_{50}');axis equal;axis([2 8 2 8]);
+% 
+% th_ratio_mu = cellfun(@(x) nanmean([x{:}],2),th_ratio,'un',0);
+% th_ratio_50_indx = cellfun(@(x) find(x > 0.5, 1), th_ratio_mu);
+% th_ratio_50 = ts(th_ratio_50_indx);
+% 
+% [h,p] = ttest(th_ratio_50(:,1),th_ratio_50(:,2));
 
 
 %%
@@ -961,15 +995,11 @@ xaxislim = [0 1];  xaxislabel = 'distance %';
 
 
 %% Compare position gain between target and actual/saccade-free eye positions
-
-keepindx = setdiff(1:numel(subject_backup),[3 5 8 11]);
-keepindx = [1 2 7 9 10 12 13 14];
-
-tracking = tracking_distperc(keepindx,:);
+tracking = tracking_distperc;
 [g,ts,xaxis] = EyePositionGain(tracking); 
 close;
 
-tracking_nosac = tracking_distperc_nosac(keepindx,:);
+tracking_nosac = tracking_distperc_nosac;
 [g_nosac,ts,xaxis] = EyePositionGain(tracking_nosac); 
 close;
 
@@ -995,8 +1025,8 @@ end
 
 %% Comparison of SE and TE correlation w and w/o saccades
 thresh=0.7; % average up to 70% of trial
-tracking = tracking_distperc(keepindx,:);
-tracking_nosac = tracking_distperc_nosac(keepindx,:);
+tracking = tracking_distperc;
+tracking_nosac = tracking_distperc_nosac;
 Nsubs = size(tracking,1);
 Nstim = size(tracking,2);
 Nt = numel(tracking{1}.eyepos.errcorr.targ.screen.r); %round(9/dt);
@@ -1016,20 +1046,22 @@ end
 xlabel({'Corr. coef Average','(actual eye)'}); ylabel({'Corr. coef Average','(saccade-free)'});title(['0-' num2str(thresh*100) '% distance'])
 axis([0 0.9 0 0.9])
 
-% open/closed bar plot
+% % open/closed bar plot
 % figure; hold on;
 % for s = 1:Nstim-1
 %     bar(s,mean(corr_sac(:,s)),'facecolor','none','edgecolor',[.5 .5 .5]); errorbar(s,mean(corr_sac(:,s)),std(corr_sac(:,s))./sqrt(Nsubs),'color',[.5 .5 .5],'capsize',0);
 %     bar(s,mean(corr_nosac(:,s)),'facecolor',colr(s,:),'edgecolor','none'); errorbar(s,mean(corr_nosac(:,s)),std(corr_nosac(:,s))./sqrt(Nsubs),'k','capsize',0);
 % end
-
+% 
 % bar plot of correlation difference
 N=100000;
 figure; hold on;
 for s = 1:Nstim-1
-    bar(s,mean(corr_sac(:,s)-corr_nosac(:,s)),'facecolor',colr(s,:),'edgecolor','none'); errorbar(s,mean(corr_sac(:,s)-corr_nosac(:,s)),std(corr_sac(:,s)-corr_nosac(:,s))./sqrt(Nsubs),'k','capsize',0);
+    diffVals = corr_sac(:,s) - corr_nosac(:,s);
+    bar(s,mean(diffVals),'facecolor',colr(s,:),'edgecolor','none'); errorbar(s,mean(diffVals),std(diffVals)./sqrt(Nsubs),'k','capsize',0);
+    scatter(repmat(s, Nsubs, 1), diffVals, 15, 'k', 'filled', 'jitter','on', 'jitterAmount', 0.1);
     % bootstrap
-    tmp = corr_sac(:,s)-corr_nosac(:,s);
+    tmp = diffVals;
     randindx = randi(Nsubs,[Nsubs N]);
     tmp = nanmean(tmp(randindx));
     p(s) = sum(tmp <= 0)/N;
@@ -1038,10 +1070,10 @@ ylabel('corr. coef. difference'); xticks(1:2);xticklabels({'vestibular','visual'
 text(1.2,0.15,'*');
 text(2.2,0.15,'**');
 
-% connecting lines
-figure; 
-for s = 1:Nstim-1
-    subplot(1,2,s);hold on;
-    plot(1:2,[corr_sac(:,s) corr_nosac(:,s)],'o-','color',colr(s,:),'markerfacecolor',colr(s,:),'markeredgecolor','none'); 
-    axis([0 3 0 1]);xticks(1:2); xticklabels({'actual eye','saccade-free'});ylabel('corr. coef. average');
-end
+% % connecting lines
+% figure; 
+% for s = 1:Nstim-1
+%     subplot(1,2,s);hold on;
+%     plot(1:2,[corr_sac(:,s) corr_nosac(:,s)],'o-','color',colr(s,:),'markerfacecolor',colr(s,:),'markeredgecolor','none'); 
+%     axis([0 3 0 1]);xticks(1:2); xticklabels({'actual eye','saccade-free'});ylabel('corr. coef. average');
+% end
