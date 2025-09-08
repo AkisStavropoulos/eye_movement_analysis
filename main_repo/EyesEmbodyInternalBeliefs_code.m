@@ -6,7 +6,7 @@
 %% Load data
 inp = input('Clear everything? 1 yes, 0 no: ');
 if inp; clear; end
-data_folder = 'C:\Users\soopa\Documents\MATLAB\Eye Movement Paper\';
+data_folder = 'C:\Users\Akis\Projects\Film\Solountrania\Check it out\';
 cd(data_folder);
 folders = dir(data_folder);   folders = folders([folders.isdir]);
 
